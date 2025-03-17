@@ -1,68 +1,71 @@
-
 import pandas as pd
 import yfinance as yf
 import statsmodels.api as sm
 
 def get_fama_french_factors(start, end):
-    """ Fetches market, size, value, and momentum factors using ETFs as proxies. """
+    """Fetches market, size, value, profitability, investment, and momentum factors using ETFs as proxies."""
 
     # Define market and risk-free rate proxies
     market_ticker = "^GSPC"  # S&P 500 as market proxy
     risk_free_ticker = "^IRX"  # 13-week T-Bill rate as risk-free proxy
-    
+
     # Define factor proxies
-    size_ticker = "IWM"  # Russell 2000 ETF (small caps)
-    value_ticker = "IVE"  # S&P 500 Value ETF
-    growth_ticker = "IVW"  # S&P 500 Growth ETF
-    
-    # Download data
+    factor_tickers = {
+        "SMB": "IWM",  # Small-cap (Russell 2000 ETF)
+        "HML_Value": "IVE",  # Value ETF
+        "HML_Growth": "IVW",  # Growth ETF
+        "RMW_High": "SPGP",  # High-profitability proxy
+        "RMW_Low": "SPYD",  # Low-profitability proxy
+        "CMA_Conservative": "USMV",  # Conservative investment proxy
+        "CMA_Aggressive": "MTUM",  # Aggressive investment proxy
+    }
+
+    # Download market and risk-free rate data
     market_data = yf.download(market_ticker, start=start, end=end)['Close'].pct_change()
-
-    # If market_data is a DataFrame with a single column, convert it to a Series
-    if isinstance(market_data, pd.DataFrame):
-        market_data = market_data.iloc[:, 0]  # Extract the first column
-
     risk_free_data = yf.download(risk_free_ticker, start=start, end=end)['Close'] / 100
 
-    # Ensure `risk_free_data` is a single-column Series
-    if isinstance(risk_free_data, pd.DataFrame):
-        risk_free_data = risk_free_data.iloc[:, 0]  # Convert to Series
-
-    # Align risk-free rate with market index
+    # Ensure both are Series and align risk-free data to market_data index
+    market_data = market_data if isinstance(market_data, pd.Series) else market_data.iloc[:, 0]
+    risk_free_data = risk_free_data if isinstance(risk_free_data, pd.Series) else risk_free_data.iloc[:, 0]
     risk_free_data = risk_free_data.reindex(market_data.index, method='ffill')
 
-    # Download factor proxy data
-    size_data = yf.download(size_ticker, start=start, end=end)['Close'].pct_change()
-    value_data = yf.download(value_ticker, start=start, end=end)['Close'].pct_change()
-    growth_data = yf.download(growth_ticker, start=start, end=end)['Close'].pct_change()
-    if isinstance(size_data, pd.DataFrame):
-        size_data = size_data.iloc[:, 0]   
-    if isinstance(value_data, pd.DataFrame):
-        value_data = value_data.iloc[:, 0] 
-    if isinstance(growth_data, pd.DataFrame):
-        growth_data = growth_data.iloc[:, 0]  
+    # Download factor proxies
+    factor_data = {key: yf.download(ticker, start=start, end=end)['Close'].pct_change() for key, ticker in factor_tickers.items()}
+    
+    # Ensure all factor data is Series and reindex them to market_data
+    for key in factor_data.keys():
+        if isinstance(factor_data[key], pd.DataFrame):
+            factor_data[key] = factor_data[key].iloc[:, 0]
+        factor_data[key] = factor_data[key].reindex(market_data.index, method='ffill')
+
     # Create factors DataFrame
     fama_factors = pd.DataFrame(index=market_data.index)
-    
-    print("Market Data Shape:", value_data.shape)
-    print("Risk-Free Data Shape:", growth_data.shape)
 
-    fama_factors['Mkt-RF'] = market_data - risk_free_data  # Market risk premium
+    # Calculate Market risk premium (Mkt-RF)
+    fama_factors['Mkt-RF'] = market_data - risk_free_data
     fama_factors['RF'] = risk_free_data  # Risk-free rate
-    
+
     # Size factor (SMB: Small Minus Big)
-    fama_factors['SMB'] = size_data - market_data  # Small-cap vs market
-    
+    fama_factors['SMB'] = factor_data['SMB'] - market_data  # Small-cap vs market
+
     # Value factor (HML: High Minus Low)
-    fama_factors['HML'] = value_data - growth_data  # Value vs growth
-    
+    fama_factors['HML'] = factor_data['HML_Value'] - factor_data['HML_Growth']  # Value vs growth
+
+    # Profitability factor (RMW: Robust Minus Weak)
+    fama_factors['RMW'] = factor_data['RMW_High'] - factor_data['RMW_Low']  # High profitability vs. Low profitability
+
+    # Investment factor (CMA: Conservative Minus Aggressive)
+    fama_factors['CMA'] = factor_data['CMA_Conservative'] - factor_data['CMA_Aggressive']  # Conservative vs. Aggressive investment
+
     # Momentum factor (UMD: Up Minus Down) - Only for 6-factor model
     rolling_returns = market_data.rolling(window=12).mean().pct_change()
     fama_factors['UMD'] = rolling_returns - rolling_returns.mean()
 
     # Drop NaN rows
     fama_factors.dropna(inplace=True)
+
     return fama_factors
+
 
 
 def get_stock_data(ticker, start, end):
@@ -88,9 +91,9 @@ def run_fama_french_regression(ticker, start, end, model_type="5-factor"):
     if model_type == "3-factor":
         ff_factors = fama_factors[['Mkt-RF', 'SMB', 'HML']]
     elif model_type == "5-factor":
-        ff_factors = fama_factors[['Mkt-RF', 'SMB', 'HML', 'RF']]
+        ff_factors = fama_factors[['Mkt-RF', 'SMB', 'HML', 'RF','RMW','CMA']]
     elif model_type == "6-factor":
-        ff_factors = fama_factors[['Mkt-RF', 'SMB', 'HML', 'RF', 'UMD']]
+        ff_factors = fama_factors[['Mkt-RF', 'SMB', 'HML', 'RF', 'RMW','CMA','UMD']]
     else:
         raise ValueError("Invalid model type. Choose '3-factor', '5-factor', or '6-factor'.")
 
