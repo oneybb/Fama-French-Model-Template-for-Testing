@@ -1,5 +1,5 @@
 # Fama-French-Model-Template-for-Testing
-different Fama French model to test different stocks for factor exposure analysis
+This repo contains different Fama French model to test a stocks for factor exposure analysis
 
 
 The **Fama-French models** are extensions of the **Capital Asset Pricing Model (CAPM)**. They introduce additional factors to explain stock returns more effectively.
