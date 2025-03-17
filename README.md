@@ -1,6 +1,7 @@
 # Fama-French-Model-Template-for-Testing
 This repo contains different Fama French model to test a stocks for factor exposure analysis
 
+The goal of this project is to analyze stock returns by decomposing them into key risk factors (market, size, value, profitability, investment, momentum). This helps to understand why a stock performs the way it does and whether its return is driven by systematic risk factors or unexplained alpha.
 
 The **Fama-French models** are extensions of the **Capital Asset Pricing Model (CAPM)**. They introduce additional factors to explain stock returns more effectively.
 
