@@ -68,3 +68,51 @@ $$
 ---
 
 
+
+
+## How to interpret OLS results:
+
+1. R-squared:
+    * Explains how much of the stock’s excess return is captured by the model.
+    * Higher R² (closer to 1) → The model does a better job of explaining returns. (>0.7)
+
+### Coeff below needs to have P-value < 0.05 to be statistically significant
+2. Mkt-RF Coeff (Beta):
+    * Measures how much the stock moves in relation to the market (S&P 500).
+    * High Beta (>1) → The stock is more volatile than the market.
+3. Size Factor Coeff (SMB - Small Minus Big):
+    * Positive SMB → The stock behaves like a small-cap stock.
+        * Above 0.2 → More exposure to small-cap stocks.
+        * Between -0.2 and 0.2 → Neutral (doesn’t behave like either).
+        * Below -0.2 → Large-cap characteristics.
+4. Value Factor (HML - High Minus Low)
+    * Positive HML → The stock behaves like a value stock.
+        * Above 0.3 → More exposure to value stocks.
+        * Between -0.3 and 0.3 → Neutral.
+        * Below -0.3 → More exposure to growth stocks.
+
+5. Profitability Factor (RMW - Robust Minus Weak)
+    * Positive RMW → The company is highly profitable.
+    * Negative RMW → The company is low profitability.
+        * Above 0.2 → High-profitability companies.
+        * Between -0.2 and 0.2 → Neutral.
+        * Below -0.2 → Weak profitability.
+
+6. Investment Factor (CMA - Conservative Minus Aggressive)
+    * Positive CMA → The company follows a conservative investment strategy.
+        * Above 0.2 → Conservative investment strategy (steady growth).
+        * Between -0.2 and 0.2 → Neutral.
+        * Below -0.2 → Aggressive investment strategy.
+
+7. Momentum Factor (UMD - Up Minus Down)
+    * Positive UMD → The stock follows momentum (winners keep winning).
+    * Negative UMD → The stock has mean-reverting behavior.
+        * Above 0.2 → Strong momentum effect.
+        * Between -0.2 and 0.2 → No strong momentum.
+        * Below -0.2 → Tends to mean revert.
+
+8. Constant (const): Alpha
+ 
+    * Measures abnormal returns that cannot be explained by the factors.
+    * If significant (p < 0.05) → The stock has unexplained alpha.
+
